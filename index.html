@@ -191,7 +191,7 @@
       padding: 18px;
       display: grid;
       gap: 12px;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
+      grid-template-columns: repeat(12, minmax(0, 1fr));
     }
 
     .result-group {
@@ -209,7 +209,7 @@
     }
 
     .metric {
-      grid-column: span 3;
+      grid-column: span 6;
       border: 1px solid #dce8e1;
       border-radius: 14px;
       padding: 14px;
@@ -257,7 +257,11 @@
     }
 
     .metric.triple {
-      grid-column: span 2;
+      grid-column: span 4;
+    }
+
+    .metric.quad {
+      grid-column: span 3;
     }
 
     .full {
@@ -401,6 +405,15 @@
           </div>
         </div>
 
+        <div class="subsection">
+          <h3>Fiscalite</h3>
+          <div class="field-grid">
+            <label>Taux fiscalite (%)
+              <input type="number" id="tauxFiscalite" value="30" min="0" max="100" step="1" />
+            </label>
+          </div>
+        </div>
+
         <div class="hint">
           Hypotheses cles: le rendement brut annualise cible sur la duree pilote tout le pricing. Les prix sont calcules pour que ce rendement soit egal a l'objectif.
           Les rendements nets affiches sont avant financement (apres charges), pour une lecture claire.
@@ -421,12 +434,18 @@
           <p class="sub">Base totale d'investissement</p>
         </article>
 
-        <div class="result-group">Rendements</div>
+        <div class="result-group" id="rendementsTitle">Rendements (-)</div>
+
+        <article class="metric important triple">
+          <h3>Rendement super net fisc (<span id="yearsLabelG">15</span>a)</h3>
+          <p class="value" id="rendSuperNet">-</p>
+          <p class="sub">Net apres charges, credit et impots estimes</p>
+        </article>
 
         <article class="metric triple">
-          <h3>Rendement brut annualise (<span id="yearsLabelA">15</span>a)</h3>
-          <p class="value" id="rendBrutPeriode">-</p>
-          <p class="sub">Doit etre egal a ton objectif de rendement</p>
+          <h3>Rendement net + credit (<span id="yearsLabelF">15</span>a)</h3>
+          <p class="value" id="rendNetCredit">-</p>
+          <p class="sub">Net apres charges et cout des interets</p>
         </article>
 
         <article class="metric triple">
@@ -439,6 +458,12 @@
           <h3>Free cashflow mensuel apres <span id="yearsLabelE">15</span>a</h3>
           <p class="value" id="freeCashflow15">-</p>
           <p class="sub">Cashflow mensuel en fin de credit (sans mensualite banque)</p>
+        </article>
+
+        <article class="metric triple">
+          <h3>Free cashflow net fiscal apres <span id="yearsLabelH">15</span>a</h3>
+          <p class="value" id="freeCashflow15NetFiscal">-</p>
+          <p class="sub">Cashflow mensuel apres impot estime en fin de credit</p>
         </article>
 
         <div class="result-group">Financement et effort mensuel</div>
@@ -491,7 +516,7 @@
     const ids = [
       "travaux", "fraisAgenceAchat", "loyerMensuel", "chargesAnnuelles", "taxeFonciere",
       "gestionMensuelle", "fraisAddAnnuels", "inflationLoyer", "apportPct", "dureeCredit",
-      "tauxCredit", "rendementRecherche", "tauxNotaire"
+      "tauxCredit", "rendementRecherche", "tauxNotaire", "tauxFiscalite"
     ];
 
     const getNum = (id) => {
@@ -532,6 +557,7 @@
       const apportPct = Math.max(0, Math.min(100, getNum("apportPct")));
       const dureeCredit = Math.max(1, getNum("dureeCredit"));
       const tauxCredit = Math.max(0, getNum("tauxCredit"));
+      const tauxFiscalite = Math.max(0, Math.min(100, getNum("tauxFiscalite"))) / 100;
       const rendementRecherche = Math.max(0.0001, getNum("rendementRecherche")) / 100;
       const tauxNotaire = Math.max(0, getNum("tauxNotaire")) / 100;
 
@@ -554,11 +580,23 @@
       const coutsAnnuels = chargesAnnuelles + taxeFonciere + fraisAddAnnuels + gestionMensuelle * 12;
 
       const netCumule = loyersCumules - coutsAnnuels * dureeCredit;
+      const totalVerseBanque = mensualite * 12 * dureeCredit;
+      const coutInteretsCumule = Math.max(0, totalVerseBanque - montantFinance);
+
+      const netCumuleApresCredit = netCumule - coutInteretsCumule;
+      const netAnnuelApresCredit = netCumuleApresCredit / dureeCredit;
+      const impotAnnuelEstime = Math.max(0, netAnnuelApresCredit) * tauxFiscalite;
+      const netAnnuelSuperNet = netAnnuelApresCredit - impotAnnuelEstime;
 
       const loyerFinal = loyerAnnuel * Math.pow(1 + inflation, Math.max(0, dureeCredit - 1));
-      const rendBrutPeriode = (loyersCumules / dureeCredit) / prixTotalNotaire;
+      const rendBrutAnnuel = loyerAnnuelMoyen / prixTotalNotaire;
       const rendNetPeriode = (netCumule / dureeCredit) / prixTotalNotaire;
+      const rendNetCredit = netAnnuelApresCredit / prixTotalNotaire;
+      const rendSuperNet = netAnnuelSuperNet / prixTotalNotaire;
       const freeCashflowApresCredit = (loyerFinal / 12) - (coutsAnnuels / 12);
+      const baseImposableAnnuelleApresCredit = Math.max(0, loyerFinal - coutsAnnuels);
+      const impotAnnuelApresCredit = baseImposableAnnuelleApresCredit * tauxFiscalite;
+      const freeCashflowApresCreditNetFiscal = freeCashflowApresCredit - (impotAnnuelApresCredit / 12);
 
       const cashflowMensuel = (loyerMensuel - (coutsAnnuels / 12) - mensualite);
       const effortMensuel = Math.max(0, -cashflowMensuel);
@@ -566,13 +604,16 @@
       setText("prixFAI", euro.format(prixFAI));
       setText("prixTotalNotaire", euro.format(prixTotalNotaire));
 
-      setText("rendBrutPeriode", percent.format(rendBrutPeriode));
       setText("rendNetPeriode", percent.format(rendNetPeriode));
+      setText("rendNetCredit", percent.format(rendNetCredit));
+      setText("rendSuperNet", percent.format(rendSuperNet));
       setText("freeCashflow15", euro.format(freeCashflowApresCredit));
+      setText("freeCashflow15NetFiscal", euro.format(freeCashflowApresCreditNetFiscal));
       setText("mensualitePret", euro.format(mensualite));
 
       setText("effortMensuel", euro.format(effortMensuel));
       setText("apport", euro.format(apport));
+      setText("rendementsTitle", "Rendements (brut annuel: " + percent.format(rendBrutAnnuel) + ")");
 
       setText(
         "detailsCredit",
@@ -583,9 +624,11 @@
       setText("cashflowMensuel", signal + euro.format(Math.abs(cashflowMensuel)) + " (apres charges et credit)");
 
       const y = String(Math.round(dureeCredit));
-      setText("yearsLabelA", y);
       setText("yearsLabelC", y);
       setText("yearsLabelE", y);
+      setText("yearsLabelF", y);
+      setText("yearsLabelG", y);
+      setText("yearsLabelH", y);
     }
 
     ids.forEach((id) => {
