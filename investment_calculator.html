@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculateur Investissement Immobilier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f7f4;
+      --panel: #ffffff;
+      --ink: #112018;
+      --muted: #4f6258;
+      --line: #d9e3dc;
+      --brand: #0c7a55;
+      --brand-soft: #e7f6ef;
+      --accent: #d9822b;
+      --danger: #af3f2b;
+      --shadow: 0 18px 45px rgba(17, 32, 24, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "IBM Plex Sans", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, #d8ede2 0%, transparent 35%),
+        radial-gradient(circle at 85% 0%, #f7e5d3 0%, transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1250px;
+      margin: 32px auto;
+      padding: 0 18px 40px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #f4f8ff, #eef6ff 60%, #f7fbff);
+      color: #12212c;
+      border-radius: 24px;
+      padding: 28px 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+      text-align: center;
+      border: 1px solid #d8e5f4;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 350px;
+      height: 350px;
+      right: -110px;
+      top: -120px;
+      background: radial-gradient(circle, rgba(123, 162, 215, 0.25), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-family: "Libre Baskerville", serif;
+      font-size: clamp(1.45rem, 2vw, 2.1rem);
+      letter-spacing: 0.2px;
+      color: #10253a;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      max-width: 820px;
+      color: #2f495f;
+      line-height: 1.45;
+      font-size: 0.98rem;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(290px, 380px) minmax(0, 1fr);
+      gap: 18px;
+      margin-top: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .inputs {
+      padding: 18px;
+      position: sticky;
+      top: 12px;
+    }
+
+    .section-title {
+      margin: 4px 0 14px;
+      font-size: 0.84rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .subsection {
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed #d9e3dc;
+    }
+
+    .subsection:last-of-type {
+      border-bottom: none;
+      margin-bottom: 8px;
+      padding-bottom: 0;
+    }
+
+    .subsection h3 {
+      margin: 0 0 10px;
+      font-size: 0.84rem;
+      color: #274236;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .secondary-sections {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .secondary-sections .subsection {
+      margin-bottom: 0;
+      padding-bottom: 8px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      font-size: 0.92rem;
+      color: #1d3327;
+      font-weight: 500;
+    }
+
+    input {
+      border: 1px solid #cbd8d0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: #fcfefd;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(12, 122, 85, 0.14);
+    }
+
+    .hint {
+      margin-top: 12px;
+      background: var(--brand-soft);
+      border: 1px solid #c9ead9;
+      color: #164735;
+      border-radius: 12px;
+      padding: 10px 11px;
+      font-size: 0.83rem;
+      line-height: 1.42;
+    }
+
+    .results {
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .result-group {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      padding: 8px 10px;
+      border-left: 4px solid #9ccab4;
+      background: #f6fbf8;
+      color: #2a4a3b;
+      border-radius: 10px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 700;
+    }
+
+    .metric {
+      grid-column: span 3;
+      border: 1px solid #dce8e1;
+      border-radius: 14px;
+      padding: 14px;
+      background: linear-gradient(180deg, #ffffff, #f7fbf9);
+      min-height: 126px;
+      display: grid;
+      align-content: start;
+      grid-template-rows: auto 1fr auto;
+      gap: 7px;
+      animation: rise 300ms ease both;
+    }
+
+    .metric h3 {
+      margin: 0;
+      font-size: 0.76rem;
+      color: #4b5f54;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric .value {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #12251c;
+    }
+
+    .metric .sub {
+      margin: 0;
+      font-size: 0.79rem;
+      color: #587062;
+      min-height: 34px;
+    }
+
+    .metric.important {
+      border-color: #aad7c3;
+      background: linear-gradient(180deg, #effaf4, #f8fcfa);
+    }
+
+    .metric.warn .value {
+      color: var(--danger);
+    }
+
+    .metric.triple {
+      grid-column: span 2;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .foot {
+      margin-top: 10px;
+      color: #4a6055;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      background: #f9fcfa;
+      border: 1px dashed #c9d8d0;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    @keyframes rise {
+      from {
+        transform: translateY(6px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 1020px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+      .inputs {
+        position: static;
+      }
+      .results {
+        grid-template-columns: 1fr;
+      }
+      .metric,
+      .metric.triple {
+        grid-column: auto;
+      }
+      .secondary-sections {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 1260px) {
+      .results {
+        grid-template-columns: repeat(2, minmax(250px, 1fr));
+      }
+      .metric,
+      .metric.triple {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="hero card">
+      <h1>Calculateur d'Investissement Immobilier</h1>
+      <p>
+        Renseigne tes hypotheses, puis la page calcule automatiquement les prix cibles,
+        le rendement brut/net, l'apport et l'effort mensuel pour tenir le credit.
+      </p>
+    </header>
+
+    <section class="layout">
+      <aside class="inputs card">
+        <h2 class="section-title">Parametres d'entree</h2>
+        <div class="subsection">
+          <h3>Estimations</h3>
+          <div class="field-grid">
+            <label>Travaux initiaux (€)
+              <input type="number" id="travaux" value="10000" min="0" step="100" />
+            </label>
+
+            <label>Loyer brut (€/mois)
+              <input type="number" id="loyerMensuel" value="750" min="0" step="10" />
+            </label>
+
+            <label>Rendement cible annualise (%)
+              <input type="number" id="rendementRecherche" value="6" min="0.1" step="0.1" />
+            </label>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3>Charges</h3>
+          <div class="field-grid">
+            <label>Charges annuelles (€/an)
+              <input type="number" id="chargesAnnuelles" value="700" min="0" step="10" />
+            </label>
+
+            <label>Taxe fonciere (€/an)
+              <input type="number" id="taxeFonciere" value="1200" min="0" step="10" />
+            </label>
+
+            <label>Frais de gestion (€/mois)
+              <input type="number" id="gestionMensuelle" value="60" min="0" step="5" />
+            </label>
+
+            <label>Frais divers (€/an)
+              <input type="number" id="fraisAddAnnuels" value="300" min="0" step="10" />
+            </label>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3>Ajustements</h3>
+          <div class="field-grid">
+            <label>Agence achat (€)
+              <input type="number" id="fraisAgenceAchat" value="5000" min="0" step="100" />
+            </label>
+
+            <label>Notaire (%)
+              <input type="number" id="tauxNotaire" value="8" min="0" step="0.1" />
+            </label>
+
+            <label>Inflation loyers (%/an)
+              <input type="number" id="inflationLoyer" value="1.5" min="0" step="0.1" />
+            </label>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <h3>Financement pret</h3>
+          <div class="field-grid">
+            <label>Apport personnel (%)
+              <input type="number" id="apportPct" value="30" min="0" max="100" step="1" />
+            </label>
+
+            <label>Duree credit (ans)
+              <input type="number" id="dureeCredit" value="15" min="1" max="40" step="1" />
+            </label>
+
+            <label>Taux credit (%)
+              <input type="number" id="tauxCredit" value="3.2" min="0" step="0.1" />
+            </label>
+          </div>
+        </div>
+
+        <div class="hint">
+          Hypotheses cles: le rendement brut annualise cible sur la duree pilote tout le pricing. Les prix sont calcules pour que ce rendement soit egal a l'objectif.
+          Les rendements nets affiches sont avant financement (apres charges), pour une lecture claire.
+        </div>
+      </aside>
+
+      <section class="results card" id="results">
+        <div class="result-group">Prix d'acquisition</div>
+        <article class="metric important">
+          <h3>Prix achat FAI</h3>
+          <p class="value" id="prixFAI">-</p>
+          <p class="sub">Prix net vendeur + frais d'agence a l'achat</p>
+        </article>
+
+        <article class="metric important">
+          <h3>Prix total + notaire</h3>
+          <p class="value" id="prixTotalNotaire">-</p>
+          <p class="sub">Base totale d'investissement</p>
+        </article>
+
+        <div class="result-group">Rendements</div>
+
+        <article class="metric triple">
+          <h3>Rendement brut annualise (<span id="yearsLabelA">15</span>a)</h3>
+          <p class="value" id="rendBrutPeriode">-</p>
+          <p class="sub">Doit etre egal a ton objectif de rendement</p>
+        </article>
+
+        <article class="metric triple">
+          <h3>Rendement net annuel (<span id="yearsLabelC">15</span>a)</h3>
+          <p class="value" id="rendNetPeriode">-</p>
+          <p class="sub">Moyenne annuelle nette (avant credit)</p>
+        </article>
+
+        <article class="metric important triple">
+          <h3>Free cashflow mensuel apres <span id="yearsLabelE">15</span>a</h3>
+          <p class="value" id="freeCashflow15">-</p>
+          <p class="sub">Cashflow mensuel en fin de credit (sans mensualite banque)</p>
+        </article>
+
+        <div class="result-group">Financement et effort mensuel</div>
+
+        <article class="metric important triple">
+          <h3>Apport necessaire</h3>
+          <p class="value" id="apport">-</p>
+          <p class="sub">Part apportee personnellement</p>
+        </article>
+
+        <article class="metric important triple">
+          <h3>Mensualite pret estimee</h3>
+          <p class="value" id="mensualitePret">-</p>
+          <p class="sub">Selon taux, duree et part financee par la banque</p>
+        </article>
+
+        <article class="metric warn triple">
+          <h3>Effort mensuel a fournir</h3>
+          <p class="value" id="effortMensuel">-</p>
+          <p class="sub">Deficit mensuel estime pour couvrir le credit</p>
+        </article>
+
+        <article class="metric full">
+          <h3>Details financement</h3>
+          <p class="value" id="detailsCredit">-</p>
+          <p class="sub" id="cashflowMensuel">-</p>
+        </article>
+
+        <div class="foot full">
+          Le calcul est indicatif et ne remplace pas une simulation bancaire ou fiscale.
+          Adapte le taux FAI, les frais de notaire, la vacance locative et la fiscalite selon ton projet reel.
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const euro = new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0
+    });
+
+    const percent = new Intl.NumberFormat("fr-FR", {
+      style: "percent",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    const ids = [
+      "travaux", "fraisAgenceAchat", "loyerMensuel", "chargesAnnuelles", "taxeFonciere",
+      "gestionMensuelle", "fraisAddAnnuels", "inflationLoyer", "apportPct", "dureeCredit",
+      "tauxCredit", "rendementRecherche", "tauxNotaire"
+    ];
+
+    const getNum = (id) => {
+      const value = Number(document.getElementById(id).value);
+      return Number.isFinite(value) ? value : 0;
+    };
+
+    const setText = (id, value) => {
+      document.getElementById(id).textContent = value;
+    };
+
+    function annuityPayment(capital, annualRatePct, years) {
+      const n = Math.max(1, Math.round(years * 12));
+      const m = (annualRatePct / 100) / 12;
+      if (m <= 0) {
+        return capital / n;
+      }
+      return capital * (m / (1 - Math.pow(1 + m, -n)));
+    }
+
+    function geometricSum(firstYear, growthRate, years) {
+      const g = growthRate;
+      if (Math.abs(g) < 1e-12) {
+        return firstYear * years;
+      }
+      return firstYear * ((Math.pow(1 + g, years) - 1) / g);
+    }
+
+    function update() {
+      const travaux = getNum("travaux");
+      const fraisAgenceAchat = getNum("fraisAgenceAchat");
+      const loyerMensuel = getNum("loyerMensuel");
+      const chargesAnnuelles = getNum("chargesAnnuelles");
+      const taxeFonciere = getNum("taxeFonciere");
+      const gestionMensuelle = getNum("gestionMensuelle");
+      const fraisAddAnnuels = getNum("fraisAddAnnuels");
+      const inflation = getNum("inflationLoyer") / 100;
+      const apportPct = Math.max(0, Math.min(100, getNum("apportPct")));
+      const dureeCredit = Math.max(1, getNum("dureeCredit"));
+      const tauxCredit = Math.max(0, getNum("tauxCredit"));
+      const rendementRecherche = Math.max(0.0001, getNum("rendementRecherche")) / 100;
+      const tauxNotaire = Math.max(0, getNum("tauxNotaire")) / 100;
+
+      const loyerAnnuel = loyerMensuel * 12;
+      const loyersCumules = geometricSum(loyerAnnuel, inflation, dureeCredit);
+      const loyerAnnuelMoyen = loyersCumules / dureeCredit;
+
+      // Objective-driven pricing: target annualized gross yield on the total invested amount.
+      const prixTotalNotaire = loyerAnnuelMoyen / rendementRecherche;
+      const baseAvantNotaire = prixTotalNotaire / (1 + tauxNotaire);
+      const prixFAITravaux = baseAvantNotaire;
+      const prixFAI = prixFAITravaux - travaux;
+      const netVendeur = prixFAI - fraisAgenceAchat;
+
+      const apport = prixTotalNotaire * (apportPct / 100);
+      const montantFinance = Math.max(0, prixTotalNotaire - apport);
+
+      const mensualite = annuityPayment(montantFinance, tauxCredit, dureeCredit);
+
+      const coutsAnnuels = chargesAnnuelles + taxeFonciere + fraisAddAnnuels + gestionMensuelle * 12;
+
+      const netCumule = loyersCumules - coutsAnnuels * dureeCredit;
+
+      const loyerFinal = loyerAnnuel * Math.pow(1 + inflation, Math.max(0, dureeCredit - 1));
+      const rendBrutPeriode = (loyersCumules / dureeCredit) / prixTotalNotaire;
+      const rendNetPeriode = (netCumule / dureeCredit) / prixTotalNotaire;
+      const freeCashflowApresCredit = (loyerFinal / 12) - (coutsAnnuels / 12);
+
+      const cashflowMensuel = (loyerMensuel - (coutsAnnuels / 12) - mensualite);
+      const effortMensuel = Math.max(0, -cashflowMensuel);
+
+      setText("prixFAI", euro.format(prixFAI));
+      setText("prixTotalNotaire", euro.format(prixTotalNotaire));
+
+      setText("rendBrutPeriode", percent.format(rendBrutPeriode));
+      setText("rendNetPeriode", percent.format(rendNetPeriode));
+      setText("freeCashflow15", euro.format(freeCashflowApresCredit));
+      setText("mensualitePret", euro.format(mensualite));
+
+      setText("effortMensuel", euro.format(effortMensuel));
+      setText("apport", euro.format(apport));
+
+      setText(
+        "detailsCredit",
+        "Mensualite credit: " + euro.format(mensualite) + " | Capital finance: " + euro.format(montantFinance)
+      );
+
+      const signal = cashflowMensuel >= 0 ? "Cashflow mensuel estime: +" : "Cashflow mensuel estime: -";
+      setText("cashflowMensuel", signal + euro.format(Math.abs(cashflowMensuel)) + " (apres charges et credit)");
+
+      const y = String(Math.round(dureeCredit));
+      setText("yearsLabelA", y);
+      setText("yearsLabelC", y);
+      setText("yearsLabelE", y);
+    }
+
+    ids.forEach((id) => {
+      document.getElementById(id).addEventListener("input", update);
+    });
+
+    update();
+  </script>
+</body>
+</html>
